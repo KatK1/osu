@@ -30,6 +30,11 @@ namespace osu.Game.Localisation
         public static LocalisableString FrameLimiter => new TranslatableString(getKey(@"frame_limiter"), @"Frame limiter");
 
         /// <summary>
+        /// "Using Metal without VSync may cause inconsistent frame pacing."
+        /// </summary>
+        public static LocalisableString MetalVSync => new TranslatableString(getKey(@"metal_vsync"), @"Using Metal without VSync may cause inconsistent frame pacing.");
+
+        /// <summary>
         /// "Threading mode"
         /// </summary>
         public static LocalisableString ThreadingMode => new TranslatableString(getKey(@"threading_mode"), @"Threading mode");

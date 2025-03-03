@@ -20,12 +20,19 @@ namespace osu.Game.Overlays.Settings.Sections.Graphics
         protected override LocalisableString Header => GraphicsSettingsStrings.RendererHeader;
 
         private bool automaticRendererInUse;
+        private SettingsEnumDropdown<FrameSync>? frameSyncDropdown;
+        private bool usingVSync;
+        private bool usingMetalRenderer;
 
         [BackgroundDependencyLoader]
         private void load(FrameworkConfigManager config, OsuConfigManager osuConfig, IDialogOverlay? dialogOverlay, OsuGame? game, GameHost host)
         {
             var renderer = config.GetBindable<RendererType>(FrameworkSetting.Renderer);
             automaticRendererInUse = renderer.Value == RendererType.Automatic;
+            usingMetalRenderer = host.ResolvedRenderer == RendererType.Metal || host.ResolvedRenderer == RendererType.Deferred_Metal;
+
+            var frameSync = config.GetBindable<FrameSync>(FrameworkSetting.FrameSync);
+            usingVSync = frameSync.Value == FrameSync.VSync;
 
             Children = new Drawable[]
             {
@@ -40,10 +47,10 @@ namespace osu.Game.Overlays.Settings.Sections.Graphics
                     Keywords = new[] { @"compatibility", @"directx" },
                 },
                 // TODO: this needs to be a custom dropdown at some point
-                new SettingsEnumDropdown<FrameSync>
+                frameSyncDropdown = new SettingsEnumDropdown<FrameSync>
                 {
                     LabelText = GraphicsSettingsStrings.FrameLimiter,
-                    Current = config.GetBindable<FrameSync>(FrameworkSetting.FrameSync),
+                    Current = frameSync,
                     Keywords = new[] { @"fps" },
                 },
                 new SettingsEnumDropdown<ExecutionMode>
@@ -79,6 +86,27 @@ namespace osu.Game.Overlays.Settings.Sections.Graphics
                     }));
                 }
             });
+
+            frameSync.BindValueChanged(sync =>
+            {
+                if (sync.NewValue == FrameSync.VSync)
+                    usingVSync = true;
+                else
+                    usingVSync = false;
+
+                handleMetalVSync();
+            });
+
+            // run once to ensure warning appears
+            handleMetalVSync();
+        }
+
+        private void handleMetalVSync()
+        {
+            if (usingMetalRenderer && !usingVSync)
+                frameSyncDropdown?.SetNoticeText(GraphicsSettingsStrings.MetalVSync, true);
+            else
+                frameSyncDropdown?.ClearNoticeText();
         }
 
         private partial class RendererSettingsDropdown : SettingsEnumDropdown<RendererType>
